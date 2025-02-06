@@ -1,0 +1,23 @@
+{
+  "name": "travel-experience-server",
+  "version": "1.0.0",
+  "description": "https://docs.inrupt.com/developer-tools/javascript/client-libraries/tutorial/authenticate-nodejs-script/",
+  "main": "authNService.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@inrupt/solid-client-access-grants": "^3.2.1",
+    "@inrupt/solid-client-authn-node": "^2.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "isomorphic-fetch": "^3.0.0",
+    "node-fetch": "^2.7.0"
+  }
+}
