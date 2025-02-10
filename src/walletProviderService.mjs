@@ -6,29 +6,13 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 const enterpriseSession = new Session();
 const userSession = new Session();
-
-const travelAppPodStorage = "https://storage.inrupt.com/7d2c4ba2-6868-424f-83b9-e0b02b480a09/";
 const userPodStorage = "https://storage.inrupt.com/70ba5def-6b7a-48d9-ac7f-4649f0cd9460/";
-
-// Authenticate enterprise app
-await enterpriseSession.login({
-  oidcIssuer: process.env.ENTERPRISE_OIDC_ISSUER,
-  clientId: process.env.ENTERPRISE_CLIENT_ID,
-  clientSecret: process.env.ENTERPRISE_CLIENT_SECRET,
-});
-
-// Authenticate end user
-await userSession.login({
-  oidcIssuer: process.env.ENDUSER_OIDC_ISSUER,
-  clientId: process.env.ENDUSER_CLIENT_ID,
-  clientSecret: process.env.ENDUSER_CLIENT_SECRET,
-});
 
 // 0. AuthN session as the companion app
 const enterpriseLogin = async () => {
   try {
     await enterpriseSession.login({
-      oidcIssuer: process.env.ENTERPRISE_OPENID_PROVIDER,
+      oidcIssuer: process.env.ENTERPRISE_OIDC_ISSUER,
       clientId: process.env.ENTERPRISE_CLIENT_ID,
       clientSecret: process.env.ENTERPRISE_CLIENT_SECRET,
     });
@@ -39,11 +23,10 @@ const enterpriseLogin = async () => {
   }
 };
 
-// 0. AuthN session as the companion app
 const userLogin = async () => {
   try {
     await userSession.login({
-      oidcIssuer: process.env.ENDUSER_OPENID_PROVIDER,
+      oidcIssuer: process.env.ENDUSER_OIDC_ISSUER,
       clientId: process.env.ENDUSER_CLIENT_ID,
       clientSecret: process.env.ENDUSER_CLIENT_SECRET,
     });
@@ -58,6 +41,7 @@ export const getUserData = async (resourceOwner) => {
   try {
     await enterpriseLogin();
     await userLogin();
+
     // 1. Issue access request to VC service
     const vcData = await issueAccessRequest(
       {
@@ -67,25 +51,28 @@ export const getUserData = async (resourceOwner) => {
         expirationDate: new Date(Date.now() + 60 * 60 * 10000),
       },
       {
-        fetch: session.fetch,
+        fetch: userSession.fetch,
         accessEndpoint: "https://vc.inrupt.com", //needed?
       }
     );
-    
+    console.log(`VC data: ${JSON.stringify(vcData)}`);
     // 2. Send access request to inbox
     const inboxUrl = "https://storage.inrupt.com/70ba5def-6b7a-48d9-ac7f-4649f0cd9460/inbox/";
     const vp = `{ "@context": ["https://www.w3.org/2018/credentials/v1"], "type": "VerifiablePresentation", "verifiableCredential": [${JSON.stringify(vcData)}]}`;
-    await enterpriseSession.fetch(inboxUrl, { method: 'POST', body: vp });
-    
+    var a = await enterpriseSession.fetch(inboxUrl, { method: 'POST', body: vp });
+    console.log(JSON.stringify(a.status));
+    console.log(`Inbox URL: ${inboxUrl}`);
+
     // 3. Grant access
     const walletApi = 'https://datawallet.inrupt.com';
-    const vcId = vcData.id.substring('https://vc.inrupt.com/vc/'.length);    
+    const vcId = vcData.id.substring('https://vc.inrupt.com/vc/'.length);
+
     const grantsUrl = walletApi + '/inbox/' + vcId + '/grantAccess';
-    await userSession.fetch(grantsUrl, { method: 'PUT' });
+    const y = await userSession.fetch(grantsUrl, { method: 'PUT' });
+    console.log(JSON.stringify(y));
     
     // 4. Get list of grants
     const getGrantsUrl = walletApi + '/accessgrants';//"https://storage.inrupt.com/70ba5def-6b7a-48d9-ac7f-4649f0cd9460/accessgrants";
-    //const getGrantsUrl = "https://storage.inrupt.com/70ba5def-6b7a-48d9-ac7f-4649f0cd9460/accessgrants";
     const grantsList = await userSession.fetch(getGrantsUrl, { method: 'GET' });
     const firstGrant = grantsList[0];
     console.log(`1st Grants list: ${await JSON.stringify(firstGrant)}`); //.json()}`);
@@ -97,7 +84,7 @@ export const getUserData = async (resourceOwner) => {
         accessGrant: grantsList[0]
       },
       {
-        fetch: session.fetch,
+        fetch: enterpriseSession.fetch,
         //accessEndpoint: "https://vc.inrupt.com",
       }
     );
