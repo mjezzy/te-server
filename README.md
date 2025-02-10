@@ -1,3 +1,10 @@
+Flow in use: https://docs.inrupt.com/data-wallet/patterns-and-flows/
+
+
+
+https://podpro.dev
+
+
 https://docs.inrupt.com/developer-tools/javascript/client-libraries/tutorial/authenticate-nodejs-script/
 
 npm install @inrupt/solid-client-authn-node

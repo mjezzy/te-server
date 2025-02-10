@@ -1,24 +1,16 @@
-export const authenticate = async (username, password) => {
+
+// AuthN session
+export const login = async (podStorageUrl) => {
   try {
-    console.log(`username: ${username}`);
-    console.log(`password: ${password}`);
-  
-    const response = await fetch('/api/authenticate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
+    await session.login({
+      oidcIssuer: process.env.OPENID_PROVIDER,
+      clientId: process.env.CLIENT_ID,
+      clientSecret: process.env.CLIENT_SECRET,
+      tokenType: "Bearer" // needed?
     });
-
-    if (!response.ok) {
-      throw new Error('Authentication failed');
-    }
-
-    const data = await response.json();
-    return { success: true, data };
+    console.log(`Logged in as ${session.info.webId}`);
   } catch (error) {
-    console.error('Error during authentication:', error);
-    return { success: false, error: error.message };
+    console.error('Login error:', error);
+    throw new Error('Authentication failed');
   }
 };

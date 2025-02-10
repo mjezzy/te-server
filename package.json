@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@inrupt/solid-client-access-grants": "^3.2.1",
+    "@inrupt/solid-client-authn-browser": "^2.3.0",
     "@inrupt/solid-client-authn-node": "^2.3.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
